@@ -1,6 +1,5 @@
-/* eslint-disable comma-dangle */
-/* eslint-disable arrow-parens */
-/* eslint-disable jsx-a11y/accessible-emoji */
+/* eslint-disable function-paren-newline */
+/* eslint-disable jsx-a11y/accessible-emoji, implicit-arrow-linebreak, comma-dangle, arrow-parens */
 import React, { useState } from 'react';
 import './App.scss';
 import cn from 'classnames';
@@ -21,24 +20,49 @@ const products = productsFromServer.map((product) => {
   return { ...product, FindCategory, FindUser };
 });
 
-function getPreparedProducts(goods, userId) {
+function getSearchProduct(goods, query) {
+  const normalizeQuery = query.trim().toLowerCase();
+
+  const result = goods.filter((product) =>
+    product.name.toLowerCase().includes(normalizeQuery)
+  );
+
+  return result;
+}
+
+function getPreparedProducts(goods, userId, searchProduct) {
   let preparedProducts = [...goods];
+
+  preparedProducts = getSearchProduct(preparedProducts, searchProduct);
 
   if (userId === null) {
     return preparedProducts;
   }
 
-  preparedProducts = preparedProducts
-    .filter((product) => product.FindUser.id === userId)
-    .map((product) => ({ ...product }));
+  if (searchProduct) {
+    preparedProducts = getSearchProduct(products, searchProduct);
+  }
+
+  preparedProducts = preparedProducts.filter(
+    (product) => product.FindUser.id === userId
+  );
 
   return preparedProducts;
 }
 
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [searchProduct, setSearchProduct] = useState('');
+  const preperProducts = getPreparedProducts(
+    products,
+    selectedUser,
+    searchProduct
+  );
 
-  const preperProducts = getPreparedProducts(products, selectedUser);
+  const handleRest = () => {
+    setSelectedUser(null);
+    setSearchProduct('');
+  };
 
   return (
     <div className="section">
@@ -72,25 +96,29 @@ export const App = () => {
             <div className="panel-block">
               <p className="control has-icons-left has-icons-right">
                 <input
+                  onChange={(e) => setSearchProduct(e.target.value)}
                   data-cy="SearchField"
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={searchProduct}
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
 
-                <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
+                {searchProduct && (
+                  <span className="icon is-right">
+                    {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                    <button
+                      onClick={() => setSearchProduct('')}
+                      data-cy="ClearButton"
+                      type="button"
+                      className="delete"
+                    />
+                  </span>
+                )}
               </p>
             </div>
 
@@ -129,6 +157,7 @@ export const App = () => {
 
             <div className="panel-block">
               <a
+                onClick={() => handleRest()}
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
@@ -140,88 +169,88 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          {!preperProducts.length && (
+          {!preperProducts.length ? (
             <p data-cy="NoMatchingMessage">
               No products matching selected criteria
             </p>
-          )}
+          ) : (
+            <table
+              data-cy="ProductTable"
+              className="table is-striped is-narrow is-fullwidth"
+            >
+              <thead>
+                <tr>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      ID
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-          <table
-            data-cy="ProductTable"
-            className="table is-striped is-narrow is-fullwidth"
-          >
-            <thead>
-              <tr>
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    ID
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      Product
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort-down" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    Product
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort-down" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      Category
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort-up" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
 
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    Category
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort-up" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
-
-                <th>
-                  <span className="is-flex is-flex-wrap-nowrap">
-                    User
-                    <a href="#/">
-                      <span className="icon">
-                        <i data-cy="SortIcon" className="fas fa-sort" />
-                      </span>
-                    </a>
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            {preperProducts.map((product) => (
-              <tbody key={product.id}>
-                <tr data-cy="Product">
-                  <td className="has-text-weight-bold" data-cy="ProductId">
-                    {product.id}
-                  </td>
-
-                  <td data-cy="ProductName">{product.name}</td>
-                  <td data-cy="ProductCategory">
-                    {`${product.FindCategory.icon} - ${product.FindCategory.title}`}
-                  </td>
-
-                  <td
-                    data-cy="ProductUser"
-                    className={cn({
-                      'has-text-link': product.FindUser.sex === 'm',
-                      'has-text-danger': product.FindUser.sex === 'f',
-                    })}
-                  >
-                    {product.FindUser.name}
-                  </td>
+                  <th>
+                    <span className="is-flex is-flex-wrap-nowrap">
+                      User
+                      <a href="#/">
+                        <span className="icon">
+                          <i data-cy="SortIcon" className="fas fa-sort" />
+                        </span>
+                      </a>
+                    </span>
+                  </th>
                 </tr>
-              </tbody>
-            ))}
-          </table>
+              </thead>
+              {preperProducts.map((product) => (
+                <tbody key={product.id}>
+                  <tr data-cy="Product">
+                    <td className="has-text-weight-bold" data-cy="ProductId">
+                      {product.id}
+                    </td>
+
+                    <td data-cy="ProductName">{product.name}</td>
+                    <td data-cy="ProductCategory">
+                      {`${product.FindCategory.icon} - ${product.FindCategory.title}`}
+                    </td>
+
+                    <td
+                      data-cy="ProductUser"
+                      className={cn({
+                        'has-text-link': product.FindUser.sex === 'm',
+                        'has-text-danger': product.FindUser.sex === 'f',
+                      })}
+                    >
+                      {product.FindUser.name}
+                    </td>
+                  </tr>
+                </tbody>
+              ))}
+            </table>
+          )}
         </div>
       </div>
     </div>
